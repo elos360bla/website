@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="nn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Varden Elite POS // Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030407;
+            --surface: #0b0e17;
+            --surface-card: #121726;
+            --surface-hover: #1a2238;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(99, 102, 241, 0.4);
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.35);
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.3);
+            --danger: #f43f5e;
+            --warning: #f59e0b;
+            --text: #f8fafc;
+            --text-muted: #64748b;
+            --radius: 18px;
+        }
+
+        * { box-sizing: border-box; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            align-items: center;
+            background-image:
+                radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+        }
+
+        .terminal-container {
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        /* PASSORDSKJIRM */
+        .auth-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 40px;
+            text-align: center;
+            max-width: 440px;
+            margin: 0 auto;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+            position: relative;
+            overflow: hidden;
+        }
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+        }
+
+        /* HEADER & NAVIGATION */
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .terminal-nav {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 6px;
+            border-radius: var(--radius);
+            flex-grow: 1;
+            margin-right: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .nav-btn {
+            padding: 14px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+        .nav-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 20px var(--primary-glow);
+        }
+
+        .settings-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius);
+            font-size: 1.3rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+        .settings-btn:hover { background: var(--surface-hover); border-color: var(--primary); transform: translateY(-2px); }
+
+        /* PANELS */
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: calc(var(--radius) + 4px);
+            padding: 30px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+        }
+
+        h2 { margin: 0 0 4px 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+        .subtitle { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px; }
+
+        .pos-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+        }
+
+        @media (max-width: 850px) {
+            .pos-layout { grid-template-columns: 1fr; }
+        }
+
+        .pos-section {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .pos-section h3 {
+            margin: 0 0 14px 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+        }
+
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .pos-tile {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px 12px;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .pos-tile:hover {
+            background: var(--surface-hover);
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px var(--primary-glow);
+        }
+        .pos-tile-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 6px; }
+        .pos-tile-price { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--primary); font-weight: 700; }
+
+        /* CART */
+        .cart-container {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .cart-items {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            background: var(--surface);
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: white;
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 8px 25px var(--success-glow);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 30px var(--success-glow); filter: brightness(1.1); }
+
+        .btn-secondary {
+            background: var(--surface);
+            border: 1px dashed var(--border);
+            color: var(--text);
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn-secondary:hover { background: var(--surface-hover); border-color: var(--primary); }
+
+        /* KITCHEN TICKETS */
+        .ticket {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .badge-done {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--success);
+            color: var(--success);
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .badge-done:hover { background: var(--success); color: white; box-shadow: 0 5px 20px var(--success-glow); }
+
+        #kiosk-alert-banner {
+            background: var(--warning);
+            color: #000;
+            padding: 16px;
+            border-radius: 14px;
+            font-weight: 800;
+            margin-bottom: 24px;
+            display: none;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.01); }
+            100% { transform: scale(1); }
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .metric-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            padding: 24px;
+            border-radius: 16px;
+            text-align: center;
+        }
+        .metric-title { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+        .metric-value { font-size: 2.5rem; font-weight: 800; color: var(--primary); margin: 8px 0 0 0; font-family: 'JetBrains Mono', monospace; }
+        .metric-value.money { color: var(--success); }
+
+        .archive-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 14px;
+            font-size: 0.9rem;
+        }
+        .archive-table th {
+            text-align: left;
+            padding: 14px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .archive-table td {
+            padding: 16px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 4, 7, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 520px;
+            padding: 30px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.9);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .edit-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="terminal-container">
+
+    <!-- PASSORDSKJIRM -->
+    <div id="global-auth" class="auth-card">
+        <h2 style="margin-bottom: 8px;">Varden Sikkerhet</h2>
+        <div class="subtitle">Skriv inn koden for å låse opp terminalen.</div>
+        <input type="password" id="global-pass-box" placeholder="Passord..." style="margin-bottom: 16px; text-align: center; letter-spacing: 2px;">
+        <button class="btn-primary" style="background: var(--primary);" onclick="unlockApp()">Lås opp terminal</button>
+        <p id="global-pass-err" style="color: var(--danger); font-size: 0.85rem; margin-top: 14px; display: none;">Feil passord!</p>
+    </div>
+
+    <!-- HOVEDAPP -->
+    <div id="app-main" class="hidden">
+
+        <div class="header-bar">
+            <div class="terminal-nav">
+                <button class="nav-btn active" id="nav-kiosk" onclick="setTab('kiosk')">⚡ KIOSK</button>
+                <button class="nav-btn" id="nav-kitchen" onclick="setTab('kitchen')">🍳 KJØKKEN</button>
+                <button class="nav-btn" id="nav-archive" onclick="setTab('archive')">📊 ARKIV & SALG</button>
+            </div>
+            <button class="settings-btn" onclick="openSettings()" title="Innstillinger">⚙️</button>
+        </div>
+
+        <!-- KIOSK PANEL -->
+        <div id="panel-kiosk" class="panel">
+            <div id="kiosk-alert-banner"></div>
+
+            <div class="pos-layout">
+                <div>
+                    <!-- OPPRETT VARER OG TOPPINGAR -->
+                    <div class="pos-section">
+                        <h3>Legg til nytt i menyen</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700">VARE</span>
+                                <div style="display:flex; gap:8px; margin-top:6px;"><input type="text" id="new-item-name" placeholder="Navn"><input type="number" id="new-item-price" placeholder="Kr" style="width: 85px;"></div>
+                                <button class="btn-secondary" onclick="addMenuItem()" style="margin-top:8px;">+ Legg til vare</button>
+                            </div>
+                            <div>
+                                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700">TOPPING</span>
+                                <div style="display:flex; gap:8px; margin-top:6px;"><input type="text" id="new-topping-name" placeholder="Navn"><input type="number" id="new-topping-price" placeholder="Kr" style="width: 85px;"></div>
+                                <button class="btn-secondary" onclick="addToppingItem()" style="margin-top:8px;">+ Legg til topping</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KLIKKBARE VARER -->
+                    <div class="pos-section">
+                        <h3>Velg vare</h3>
+                        <div id="menu-items-grid" class="item-grid">
+                            <p style="color: var(--text-muted); font-size: 0.85rem;">Ingen varer lagt til enno.</p>
+                        </div>
+                    </div>
+
+                    <!-- KLIKKBARE TOPPINGAR -->
+                    <div class="pos-section">
+                        <h3>Velg topping (valgfritt)</h3>
+                        <div id="menu-toppings-grid" class="item-grid">
+                            <p style="color: var(--text-muted); font-size: 0.85rem;">Ingen toppingar lagt til enno.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HANDLEKURV / KASSE -->
+                <div class="cart-container">
+                    <h3 style="margin-top:0; color:var(--text); margin-bottom: 12px;">Handlekurv</h3>
+                    <div style="margin-bottom: 14px;">
+                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight:700;">KUNDENAMN</span>
+                        <input type="text" id="customer-name" placeholder="Namn på kunden..." style="margin-top: 6px;">
+                    </div>
+
+                    <div class="cart-items" id="cart-items-list">
+                        <p style="color: var(--text-muted); font-style: italic; text-align:center; font-size:0.85rem; padding: 20px 0;">Handlekurven er tom</p>
+                    </div>
+
+                    <div class="cart-total">
+                        <span>Totalt:</span>
+                        <span id="cart-total-price" style="color: var(--success);">0 kr</span>
+                    </div>
+
+                    <button class="btn-primary" onclick="submitPOSOrder()">FULLFØR & SEND TIL KJØKKEN 🚀</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- KJØKKEN PANEL -->
+        <div id="panel-kitchen" class="panel hidden">
+            <h2>Aktive bestillingar</h2>
+            <div class="subtitle">Ordrene oppdaterer seg automatisk når kassa sender inn noko nytt.</div>
+            <div id="tickets-list" style="margin-top: 14px;">
+                <p style="color: var(--text-muted); text-align: center; padding: 30px 0; font-style: italic;">Ingen aktive ordrer.</p>
+            </div>
+        </div>
+
+        <!-- ARKIV & SALGSOPPTELJING PANEL -->
+        <div id="panel-archive" class="panel hidden">
+            <h2>Salgsarkiv & Kveldsstatistikk</h2>
+            <div class="subtitle">Full oversikt over alt som er selt, porsjonar og samla inntening.</div>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-title">Totalt selt porsjonar</div>
+                    <div class="metric-value" id="archive-portions">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Samla inntening</div>
+                    <div class="metric-value money" id="archive-revenue">0 kr</div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; margin-bottom: 12px;">
+                <h3 style="margin:0; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Historikk over alle kjøp</h3>
+                <button style="padding: 8px 14px; border-radius: 10px; font-size: 0.8rem; font-weight: 700; cursor: pointer; border: 1px solid var(--border); background: rgba(244, 63, 94, 0.1); color: var(--danger);" onclick="confirmResetArchive()">🔄 Nullstill arkiv</button>
+            </div>
+
+            <div style="background: var(--surface-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;">
+                <table class="archive-table">
+                    <thead>
+                        <tr>
+                            <th>Tid</th>
+                            <th>Kunde</th>
+                            <th>Varer & Toppingar</th>
+                            <th style="text-align: right;">Sum</th>
+                        </tr>
+                    </thead>
+                    <tbody id="archive-table-body">
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 30px;">Ingen sal registrert enno.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- INNSTILLINGS POP-UP / MODAL -->
+<div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h2>Innstillinger & Meny</h2>
+        <div class="subtitle" style="margin-bottom: 20px;">Rediger eller slett elementer frå menyen.</div>
+
+        <h3 style="font-size: 0.8rem; color: var(--primary); text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.1em; font-weight: 700;">Varer</h3>
+        <div id="edit-items-container" style="margin-bottom: 24px;"></div>
+
+        <h3 style="font-size: 0.8rem; color: var(--primary); text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.1em; font-weight: 700;">Toppingar</h3>
+        <div id="edit-toppings-container" style="margin-bottom: 24px;"></div>
+
+        <button class="btn-primary" onclick="closeSettings()" style="background: var(--primary);">Lagre & Lukk</button>
+    </div>
+</div>
+
+<script>
+    let menuItems = JSON.parse(localStorage.getItem('varden_pos_menu_v2') || '[]');
+    let menuToppings = JSON.parse(localStorage.getItem('varden_pos_toppings_v2') || '[]');
+    let currentCart = [];
+
+    let activeOrders = JSON.parse(localStorage.getItem('varden_pos_orders_v2') || '[]');
+    let salesArchive = JSON.parse(localStorage.getItem('varden_pos_archive_v2') || '[]');
+    let readyNotifications = JSON.parse(localStorage.getItem('varden_pos_ready_v2') || '[]');
+
+    function unlockApp() {
+        let val = document.getElementById('global-pass-box').value;
+        if(val === 'Varden2019') {
+            document.getElementById('global-auth').classList.add('hidden');
+            document.getElementById('app-main').classList.remove('hidden');
+            renderPOSUI();
+            checkKioskAlerts();
+        } else {
+            document.getElementById('global-pass-err').style.display = 'block';
+        }
+    }
+
+    function setTab(target) {
+        document.getElementById('panel-kiosk').classList.add('hidden');
+        document.getElementById('panel-kitchen').classList.add('hidden');
+        document.getElementById('panel-archive').classList.add('hidden');
+
+        document.getElementById('nav-kiosk').classList.remove('active');
+        document.getElementById('nav-kitchen').classList.remove('active');
+        document.getElementById('nav-archive').classList.remove('active');
+
+        if(target === 'kiosk') {
+            document.getElementById('panel-kiosk').classList.remove('hidden');
+            document.getElementById('nav-kiosk').classList.add('active');
+            checkKioskAlerts();
+        } else if(target === 'kitchen') {
+            document.getElementById('panel-kitchen').classList.remove('hidden');
+            document.getElementById('nav-kitchen').classList.add('active');
+            renderKitchenView();
+        } else if(target === 'archive') {
+            document.getElementById('panel-archive').classList.remove('hidden');
+            document.getElementById('nav-archive').classList.add('active');
+            renderArchiveView();
+        }
+    }
+
+    function addMenuItem() {
+        let name = document.getElementById('new-item-name').value.trim();
+        let price = parseFloat(document.getElementById('new-item-price').value) || 0;
+        if(!name) { alert('Skriv eit varenamn!'); return; }
+
+        menuItems.push({ name, price });
+        document.getElementById('new-item-name').value = '';
+        document.getElementById('new-item-price').value = '';
+        savePOSData();
+        renderPOSUI();
+    }
+
+    function addToppingItem() {
+        let name = document.getElementById('new-topping-name').value.trim();
+        let price = parseFloat(document.getElementById('new-topping-price').value) || 0;
+        if(!name) { alert('Skriv eit toppingnamn!'); return; }
+
+        menuToppings.push({ name, price });
+        document.getElementById('new-topping-name').value = '';
+        document.getElementById('new-topping-price').value = '';
+        savePOSData();
+        renderPOSUI();
+    }
+
+    function openSettings() {
+        renderSettingsModal();
+        document.getElementById('settings-modal').classList.remove('hidden');
+    }
+
+    function closeSettings() {
+        document.getElementById('settings-modal').classList.add('hidden');
+        renderPOSUI();
+    }
+
+    function renderSettingsModal() {
+        let itemsContainer = document.getElementById('edit-items-container');
+        if(menuItems.length === 0) {
+            itemsContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Ingen varer lagt til enno.</p>';
+        } else {
+            itemsContainer.innerHTML = menuItems.map((item, idx) => `
+                <div class="edit-row">
+                    <input type="text" value="${item.name}" oninput="updateItemName(${idx}, this.value)">
+                    <input type="number" value="${item.price}" style="width: 90px;" oninput="updateItemPrice(${idx}, this.value)">
+                    <button style="background:rgba(244,63,94,0.1); border:1px solid var(--danger); color:var(--danger); border-radius:10px; padding:14px; cursor:pointer;" onclick="deleteItem(${idx})">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        let toppingsContainer = document.getElementById('edit-toppings-container');
+        if(menuToppings.length === 0) {
+            toppingsContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Ingen toppingar lagt til enno.</p>';
+        } else {
+            toppingsContainer.innerHTML = menuToppings.map((top, idx) => `
+                <div class="edit-row">
+                    <input type="text" value="${top.name}" oninput="updateToppingName(${idx}, this.value)">
+                    <input type="number" value="${top.price}" style="width: 89px;" oninput="updateToppingPrice(${idx}, this.value)">
+                    <button style="background:rgba(244,63,94,0.1); border:1px solid var(--danger); color:var(--danger); border-radius:10px; padding:14px; cursor:pointer;" onclick="deleteTopping(${idx})">🗑️</button>
+                </div>
+            `).join('');
+        }
+    }
+
+    function updateItemName(idx, val) { menuItems[idx].name = val; savePOSData(); }
+    function updateItemPrice(idx, val) { menuItems[idx].price = parseFloat(val) || 0; savePOSData(); }
+    function deleteItem(idx) { menuItems.splice(idx, 1); savePOSData(); renderSettingsModal(); }
+
+    function updateToppingName(idx, val) { menuToppings[idx].name = val; savePOSData(); }
+    function updateToppingPrice(idx, val) { menuToppings[idx].price = parseFloat(val) || 0; savePOSData(); }
+    function deleteTopping(idx) { menuToppings.splice(idx, 1); savePOSData(); renderSettingsModal(); }
+
+    function renderPOSUI() {
+        let grid = document.getElementById('menu-items-grid');
+        if(menuItems.length === 0) {
+            grid.innerHTML = '<p style="color: var(--text-muted); font-size: 0.95rem;">Ingen varer lagt til enno.</p>';
+        } else {
+            grid.innerHTML = menuItems.map((item, idx) => `
+                <div class="pos-tile" onclick="addCartItem(${idx})">
+                    <div class="pos-tile-title">${item.name}</div>
+                    <div class="pos-tile-price">${item.price} kr</div>
+                </div>
+            `).join('');
+        }
+
+        let tGrid = document.getElementById('menu-toppings-grid');
+        if(menuToppings.length === 0) {
+            tGrid.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem;">Ingen toppingar lagt til enno.</p>';
+        } else {
+            tGrid.innerHTML = menuToppings.map((top, idx) => `
+                <div class="pos-tile" style="border-style: dashed;" onclick="addToppingToLatest(${idx})">
+                    <div class="pos-tile-title">+ ${top.name}</div>
+                    <div class="pos-tile-price">+${top.price} kr</div>
+                </div>
+            `).join('');
+        }
+
+        renderCart();
+    }
+
+    function addCartItem(index) {
+        let item = menuItems[index];
+        currentCart.push({ name: item.name, price: item.price, toppings: [] });
+        renderCart();
+    }
+
+    function addToppingToLatest(index) {
+        if(currentCart.length === 0) { alert('Legg til ei vare i handlekurven først!'); return; }
+        let topping = menuToppings[index];
+        let latestItem = currentCart[currentCart.length - 1];
+        latestItem.toppings.push({ name: topping.name, price: topping.price });
+        renderCart();
+    }
+
+    function removeFromCart(index) {
+        currentCart.splice(index, 1);
+        renderCart();
+    }
+
+    function renderCart() {
+        let list = document.getElementById('cart-items-list');
+        if(currentCart.length === 0) {
+            list.innerHTML = '<p style="color: var(--text-muted); font-style: italic; text-align:center; font-size:0.85rem; padding: 20px 0;">Handlekurven er tom</p>';
+            document.getElementById('cart-total-price').innerText = '0 kr';
+            return;
+        }
+
+        let total = 0;
+        list.innerHTML = currentCart.map((ci, idx) => {
+            let itemTotal = ci.price;
+            let topsHtml = ci.toppings.map(t => {
+                itemTotal += t.price;
+                return `<br>&nbsp;&nbsp;+ ${t.name} (${t.price} kr)`;
+            }).join('');
+            total += itemTotal;
+
+            return `
+                <div class="cart-item">
+                    <div><b>1x ${ci.name}</b> (${ci.price} kr)${topsHtml}</div>
+                    <button style="background:none; border:none; color:var(--danger); cursor:pointer; font-weight:bold; font-size: 1.1rem;" onclick="removeFromCart(${idx})">✕</button>
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('cart-total-price').innerText = total + ' kr';
+    }
+
+    function submitPOSOrder() {
+        let customer = document.getElementById('customer-name').value.trim();
+        if(!customer) { alert('Skriv inn namnet på kunden!'); return; }
+        if(currentCart.length === 0) { alert('Handlekurven er tom!'); return; }
+
+        let orderItems = currentCart.map(ci => {
+            let itemSum = ci.price;
+            let topNames = ci.toppings.map(t => { itemSum += t.price; return t.name; });
+            return { name: ci.name, qty: 1, toppings: topNames, totalPrice: itemSum };
+        });
+
+        let orderTotal = orderItems.reduce((sum, i) => sum + i.totalPrice, 0);
+        let newOrder = {
+            id: 'ord-' + Date.now(),
+            customer: customer,
+            items: orderItems,
+            totalPrice: orderTotal,
+            portions: currentCart.length,
+            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        };
+
+        activeOrders.push(newOrder);
+        salesArchive.push(newOrder);
+        currentCart = [];
+        document.getElementById('customer-name').value = '';
+        savePOSData();
+        renderPOSUI();
+        alert('Bestilling sendt til kjøkkenet! 🚀');
+    }
+
+    function renderKitchenView() {
+        let list = document.getElementById('tickets-list');
+        if(activeOrders.length === 0) {
+            list.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 30px 0; font-style: italic;">Ingen aktive ordrer.</p>';
+            return;
+        }
+
+        list.innerHTML = activeOrders.map((o, idx) => `
+            <div class="ticket">
+                <div>
+                    <strong style="color: white; font-size: 1.15rem;">👤 ${o.customer}</strong>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">(${o.time})</span>
+                    <div style="margin: 10px 0; color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;">
+                        ${o.items.map(i => `
+                            • <b>${i.qty}x ${i.name}</b> (${i.totalPrice} kr)
+                            ${i.toppings && i.toppings.length > 0 ? `<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--primary); font-size: 0.85rem;">Toppingar: ${i.toppings.join(', ')}</span>` : ''}
+                        `).join('<br>')}
+                    </div>
+                </div>
+                <button class="badge-done" onclick="markReady(${idx})">Klar ✓</button>
+            </div>
+        `).join('');
+    }
+
+    function renderArchiveView() {
+        let totalPortions = salesArchive.reduce((sum, o) => sum + o.portions, 0);
+        let totalRevenue = salesArchive.reduce((sum, o) => sum + o.totalPrice, 0);
+
+        document.getElementById('archive-portions').innerText = totalPortions;
+        document.getElementById('archive-revenue').innerText = totalRevenue + ' kr';
+
+        let tbody = document.getElementById('archive-table-body');
+        if(salesArchive.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 30px;">Ingen sal registrert enno.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = salesArchive.slice().reverse().map(o => `
+            <tr>
+                <td style="color: var(--text-muted); font-size: 0.85rem; font-family: 'JetBrains Mono', monospace;">${o.time}</td>
+                <td><b>${o.customer}</b></td>
+                <td style="color: var(--text-muted); font-size: 0.9rem;">
+                    ${o.items.map(i => `${i.name} ${i.toppings.length ? '(' + i.toppings.join(', ') + ')' : ''}`).join(', ')}
+                </td>
+                <td style="text-align: right; font-weight: 700; color: var(--success); font-family: 'JetBrains Mono', monospace;">${o.totalPrice} kr</td>
+            </tr>
+        `).join('');
+    }
+
+    function markReady(idx) {
+        let order = activeOrders[idx];
+        readyNotifications.push(`Maten til ${order.customer} er klar! 🚀`);
+        activeOrders.splice(idx, 1);
+        savePOSData();
+        renderKitchenView();
+    }
+
+    function checkKioskAlerts() {
+        let banner = document.getElementById('kiosk-alert-banner');
+        if(readyNotifications.length > 0) {
+            banner.innerHTML = readyNotifications.join('<br>');
+            banner.style.display = 'block';
+            setTimeout(() => {
+                readyNotifications = [];
+                savePOSData();
+                banner.style.display = 'none';
+            }, 8000);
+        } else {
+            banner.style.display = 'none';
+        }
+    }
+
+    function confirmResetArchive() {
+        if(confirm('Vil du nullstille heile arkivet og teljarane?')) {
+            salesArchive = [];
+            activeOrders = [];
+            readyNotifications = [];
+            savePOSData();
+            renderArchiveView();
+            renderKitchenView();
+        }
+    }
+
+    function savePOSData() {
+        localStorage.setItem('varden_pos_menu_v2', JSON.stringify(menuItems));
+        localStorage.setItem('varden_pos_toppings_v2', JSON.stringify(menuToppings));
+        localStorage.setItem('varden_pos_orders_v2', JSON.stringify(activeOrders));
+        localStorage.setItem('varden_pos_archive_v2', JSON.stringify(salesArchive));
+        localStorage.setItem('varden_pos_ready_v2', JSON.stringify(readyNotifications));
+    }
+
+    window.addEventListener('storage', () => {
+        activeOrders = JSON.parse(localStorage.getItem('varden_pos_orders_v2') || '[]');
+        salesArchive = JSON.parse(localStorage.getItem('varden_pos_archive_v2') || '[]');
+        readyNotifications = JSON.parse(localStorage.getItem('varden_pos_ready_v2') || '[]');
+
+        if(!document.getElementById('panel-kitchen').classList.contains('hidden')) renderKitchenView();
+        if(!document.getElementById('panel-kiosk').classList.contains('hidden')) checkKioskAlerts();
+        if(!document.getElementById('panel-archive').classList.contains('hidden')) renderArchiveView();
+    });
+</script>
+
+</body>
+</html>
